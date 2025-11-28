@@ -1,17 +1,30 @@
+# Dockerfile.worker → runs the MailOps API + queues (apps/mailops)
+
 FROM node:22-alpine
 
 WORKDIR /app
 
+# System deps
 RUN apk add --no-cache libc6-compat openssl
+
+# Install dependencies using workspaces
 COPY package.json package-lock.json ./
-COPY apps/worker/package.json apps/worker/
+COPY apps/mailops/package.json apps/mailops/
 COPY packages/database/package.json packages/database/
 COPY packages/types/package.json packages/types/
-
 RUN npm install
 
+# Copy full monorepo
 COPY . .
 
+# Generate Prisma client (no DB connection needed)
 RUN npm run db:generate --workspace=packages/database
 
-CMD ["npm", "run", "start", "--workspace=apps/worker"]
+ENV NODE_ENV=production
+ENV APP_ENV=production
+ENV PORT=3001
+
+EXPOSE 3001
+
+# Start MailOps service (API + worker)
+CMD ["npm", "run", "start", "--workspace=apps/mailops"]
