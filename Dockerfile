@@ -26,7 +26,7 @@ FROM deps AS builder
 COPY . .
 
 RUN npm run db:generate --workspace=packages/database
-RUN npm run db:migrate --workspace=packages/database
+# ❌ Removed db:migrate here
 RUN npm run build --workspace=apps/web
 
 # --------------------------
@@ -35,7 +35,6 @@ RUN npm run build --workspace=apps/web
 FROM node:22-alpine AS runner
 
 WORKDIR /app
-
 ENV NODE_ENV=production
 ENV PORT=3000
 
