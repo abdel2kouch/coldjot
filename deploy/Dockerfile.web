@@ -1,25 +1,33 @@
+# Dockerfile.web  → builds and runs the Next.js web app (apps/web)
+
 FROM node:22-alpine
 
 WORKDIR /app
 
-# Install OS deps and copy package definitions
+# System deps
 RUN apk add --no-cache libc6-compat openssl
+
+# Install dependencies using workspaces
 COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
 COPY packages/database/package.json packages/database/
 COPY packages/types/package.json packages/types/
-
 RUN npm install
 
-# Copy entire repo
+# Copy full monorepo
 COPY . .
 
-# Generate DB client
+# Generate Prisma client (no DB connection needed)
 RUN npm run db:generate --workspace=packages/database
 
-# Build web app
+# Build the web app
 RUN npm run build --workspace=apps/web
+
+# Runtime
+ENV NODE_ENV=production
+ENV APP_ENV=production
 
 EXPOSE 3000
 
+# Start Next.js web app
 CMD ["npm", "run", "start", "--workspace=apps/web"]
