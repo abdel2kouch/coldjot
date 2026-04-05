@@ -24,14 +24,34 @@ ENV NEXT_PUBLIC_APP_ENV=production
 ENV NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_MAILOPS_API_URL=http://localhost:3001/api
 
+# Provide required env vars for Zod validation during build (env.ts)
+ENV GOOGLE_CLIENT_ID=placeholder
+ENV GOOGLE_CLIENT_SECRET=placeholder
+ENV GOOGLE_REDIRECT_URI=http://localhost:3001/api/auth/callback/google
+ENV GOOGLE_CLIENT_ID_EMAIL=placeholder
+ENV GOOGLE_CLIENT_SECRET_EMAIL=placeholder
+ENV GOOGLE_REDIRECT_URI_EMAIL=http://localhost:3000/api/mailboxes/gmail/callback
+ENV NEXTAUTH_SECRET=build-time-placeholder
+ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
+
 # Create minimal env file for next.config.ts
 RUN mkdir -p apps/web/env && cp apps/web/env/.env.example apps/web/env/.env.production
 
 # Generate Prisma client (no DB connection needed)
 RUN npm run db:generate --workspace=packages/database
 
-# Build the web app (override script's APP_ENV=development)
+# Build the web app
 RUN APP_ENV=production npm run build:prod --workspace=apps/web
+
+# Clear build-time placeholders (runtime env vars from Dokploy will override)
+ENV GOOGLE_CLIENT_ID=
+ENV GOOGLE_CLIENT_SECRET=
+ENV GOOGLE_REDIRECT_URI=
+ENV GOOGLE_CLIENT_ID_EMAIL=
+ENV GOOGLE_CLIENT_SECRET_EMAIL=
+ENV GOOGLE_REDIRECT_URI_EMAIL=
+ENV NEXTAUTH_SECRET=
+ENV DATABASE_URL=
 
 EXPOSE 3000
 
