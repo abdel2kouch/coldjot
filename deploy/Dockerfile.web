@@ -40,6 +40,9 @@ RUN mkdir -p apps/web/env && cp apps/web/env/.env.example apps/web/env/.env.prod
 # Generate Prisma client (no DB connection needed)
 RUN npm run db:generate --workspace=packages/database
 
+# Build shared packages first (types needs tsup to produce dist/)
+RUN npm run build --workspace=packages/types
+
 # Build the web app
 RUN APP_ENV=production npm run build:prod --workspace=apps/web
 
