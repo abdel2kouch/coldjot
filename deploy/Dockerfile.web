@@ -17,15 +17,21 @@ RUN npm install
 # Copy full monorepo
 COPY . .
 
+# Set env vars BEFORE build (Next.js needs NEXT_PUBLIC_* at build time)
+ENV NODE_ENV=production
+ENV APP_ENV=production
+ENV NEXT_PUBLIC_APP_ENV=production
+ENV NEXT_PUBLIC_APP_URL=http://localhost:3000
+ENV NEXT_PUBLIC_MAILOPS_API_URL=http://localhost:3001/api
+
+# Create minimal env file for next.config.ts
+RUN mkdir -p apps/web/env && cp apps/web/env/.env.example apps/web/env/.env.production
+
 # Generate Prisma client (no DB connection needed)
 RUN npm run db:generate --workspace=packages/database
 
-# Build the web app
-RUN npm run build --workspace=apps/web
-
-# Runtime
-ENV NODE_ENV=production
-ENV APP_ENV=production
+# Build the web app (override script's APP_ENV=development)
+RUN APP_ENV=production npm run build:prod --workspace=apps/web
 
 EXPOSE 3000
 
